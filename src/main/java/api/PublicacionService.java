@@ -1,13 +1,13 @@
 package api;
 
 public interface PublicacionService {
-    String ultimosPosts();
+    String ultimasPublicaciones();
 
-    String post(String postId);
+    String publicacion(String publicacionId);
 
-    String posts(String nombre);
+    String publicaciones(String nombre);
 
-    String autoresPosts();
+    String autoresPublicaciones();
 
-    String postsPorTexto(String texto);
+    String publicacionesPorTexto(String texto);
 }

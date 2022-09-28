@@ -1,7 +1,5 @@
 package web;
 
-import java.util.Map;
-
 import api.PaginaService;
 import api.PublicacionService;
 import io.javalin.Javalin;
@@ -23,16 +21,15 @@ public class WebAPI {
             config.enableCorsForAllOrigins();
         }).start(this.webPort);
 
-        app.get("/pages/:id", obtenerPagina());
+        app.get("/pages/{id}", obtenerPagina());
         app.get("/posts/latest", obtenerUltimosPosts());
-        app.get("/posts/:id", obtenerPost());
-        app.get("/posts/author/:name", obtenerPostsAutor());
+        app.get("/posts/{id}", obtenerPost());
+        app.get("/posts/author/{name}", obtenerPostsAutor());
         app.get("/byauthor", obtenerAutoresCantidadPosts());
-        app.get("/search/:text", busquedaPorTexto());
+        app.get("/search/{text}", busquedaPorTexto());
 
         app.exception(Exception.class, (e, ctx) -> {
-            ctx.json(Map.of("result", "error", "message", "Ups... algo se rompió.: " + e.getMessage()))
-                    .status(400);
+            ctx.json(e.getMessage()).status(400);
         });
     }
 
@@ -40,45 +37,45 @@ public class WebAPI {
         return ctx -> {
             var paginaId = ctx.pathParam("id");
             var pagina = this.paginaService.pagina(paginaId);
-            ctx.json(Map.of("result", "success", "pagina", pagina));
+            ctx.json(pagina);
         };
     }
 
     private Handler obtenerUltimosPosts() {
         return ctx -> {
-            var posts = this.publicacionService.ultimosPosts();
-            ctx.json(Map.of("result", "success", "posts", posts));
+            var posts = this.publicacionService.ultimasPublicaciones();
+            ctx.json(posts);
         };
     }
 
     private Handler obtenerPost() {
         return ctx -> {
             var postId = ctx.pathParam("id");
-            var post = this.publicacionService.post(postId);
-            ctx.json(Map.of("result", "success", "post", post));
+            var post = this.publicacionService.publicacion(postId);
+            ctx.json(post);
         };
     }
 
     private Handler obtenerPostsAutor() {
         return ctx -> {
-            var nombre = ctx.pathParam("nombre");
-            var posts = this.publicacionService.posts(nombre);
-            ctx.json(Map.of("result", "success", "posts", posts));
+            var nombre = ctx.pathParam("name");
+            var posts = this.publicacionService.publicaciones(nombre);
+            ctx.json(posts);
         };
     }
 
     private Handler obtenerAutoresCantidadPosts() {
         return ctx -> {
-            var posts = this.publicacionService.autoresPosts();
-            ctx.json(Map.of("result", "success", "posts", posts));
+            var posts = this.publicacionService.autoresPublicaciones();
+            ctx.json(posts);
         };
     }
 
     private Handler busquedaPorTexto() {
         return ctx -> {
             var texto = ctx.pathParam("text");
-            var posts = this.publicacionService.postsPorTexto(texto);
-            ctx.json(Map.of("result", "success", "posts", posts));
+            var posts = this.publicacionService.publicacionesPorTexto(texto);
+            ctx.json(posts);
         };
     }
 }
