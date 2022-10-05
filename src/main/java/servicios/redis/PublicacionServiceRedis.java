@@ -1,8 +1,12 @@
 package servicios.redis;
 
 import api.PublicacionService;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
+
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class PublicacionServiceRedis implements PublicacionService {
@@ -37,8 +41,18 @@ public class PublicacionServiceRedis implements PublicacionService {
 
     @Override
     public String autoresPublicaciones() {
-        /*Hacer un hash o set en redis para cada autor con su cantidad de publicaciones, cada ves que se agrega una aumentaria y asi*/
-        return null;
+        Jedis jedis = new Jedis(this.url);
+        Map<String, String> resultado = jedis.hgetAll("autor:pubs");
+        JSONArray resultadoJSON = new JSONArray();
+        resultado.entrySet().stream()
+                .map(e -> {
+                    JSONObject address = new JSONObject();
+                    address.put("_id", e.getKey());
+                    address.put("count", e.getValue());
+                    return address;
+                })
+                .forEach(resultadoJSON::put);
+        return resultadoJSON.toString();
     }
 
     @Override
