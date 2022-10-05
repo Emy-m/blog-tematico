@@ -1,4 +1,4 @@
-package servicios;
+package servicios.mongo;
 
 import api.PaginaService;
 import com.mongodb.MongoClient;
