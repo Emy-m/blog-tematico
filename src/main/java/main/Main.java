@@ -11,7 +11,7 @@ public class Main {
     private static final int MDB_PORT = 27017;
     private static final String MDB_NAME = "db_tematica";
 
-    private static final String REDIS_URL = "redis://default:redispw@localhost:49153";
+    private static final String REDIS_URL = "redis://default:redispw@localhost:6379";
 
     public static void main(String[] args) {
         PaginaServiceMDB paginaServiceMDB = new PaginaServiceMDB(MDB_PORT, MDB_NAME);

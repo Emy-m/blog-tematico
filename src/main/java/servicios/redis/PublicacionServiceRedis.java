@@ -4,13 +4,12 @@ import api.PublicacionService;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import redis.clients.jedis.Jedis;
-
+import redis.clients.jedis.JedisPooled;
+import redis.clients.jedis.search.Document;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class PublicacionServiceRedis implements PublicacionService {
-    private final static String PUBLICACIONES_KEY = "publicaciones";
     private String url;
 
     public PublicacionServiceRedis(String url) {
@@ -19,24 +18,37 @@ public class PublicacionServiceRedis implements PublicacionService {
 
     @Override
     public String ultimasPublicaciones() {
-        Jedis jedis = new Jedis(this.url);
+        JedisPooled jedis = new JedisPooled(this.url);
         List<String> pubsPorFecha = jedis.zrange("pubsPorFecha", 0, 3);
-        List<String> resultado = jedis.hmget(PUBLICACIONES_KEY, pubsPorFecha.toArray(new String[pubsPorFecha.size()]));
-        return resultado.toString();
+        List<JSONArray> jsonArray = jedis.jsonMGet(pubsPorFecha.toArray(new String[pubsPorFecha.size()]));
+        JSONArray jsonArrayPlain = new JSONArray();
+        for (JSONArray json : jsonArray) {
+            jsonArrayPlain.put(json.getJSONObject(0));
+        }
+        return jsonArrayPlain.toString();
     }
 
     @Override
     public String publicacion(String publicacionId) {
-        Jedis jedis = new Jedis(this.url);
-        return jedis.hget(PUBLICACIONES_KEY, "publicacion:" + publicacionId);
+        // try with resourses add
+        JedisPooled jedis = new JedisPooled(this.url);
+        Object jsonObject = jedis.jsonGet("post:" + publicacionId);
+        JSONArray jsonArray = new JSONArray();
+        jsonArray.put(jsonObject);
+        return jsonArray.toString();
     }
 
     @Override
     public String publicaciones(String nombre) {
-        Jedis jedis = new Jedis(this.url);
-        Set<String> comparacion = jedis.sinter(new String[]{"pubsPorNombre:" + nombre, "indicePubs"});
-        List<String> resultado = jedis.hmget(PUBLICACIONES_KEY, comparacion.toArray(new String[comparacion.size()]));
-        return resultado.toString();
+        JedisPooled jedis = new JedisPooled(this.url);
+        List<Document> resultado = jedis.ftSearch("postIdx", "@autor:" + nombre).getDocuments();
+        JSONArray jsonArray = new JSONArray();
+        for (Document document : resultado) {
+            document.getProperties().forEach(p -> {
+                jsonArray.put(p.getValue());
+            });
+        }
+        return jsonArray.toString();
     }
 
     @Override
@@ -57,7 +69,14 @@ public class PublicacionServiceRedis implements PublicacionService {
 
     @Override
     public String publicacionesPorTexto(String texto) {
-        /*buscar info de como agregar la extension a redis para hacer esto*/
-        return null;
+        JedisPooled jedis = new JedisPooled(this.url);
+        List<Document> resultado = jedis.ftSearch("postIdx", "@texto:" + texto).getDocuments();
+        JSONArray jsonArray = new JSONArray();
+        for (Document document : resultado) {
+            document.getProperties().forEach(p -> {
+                jsonArray.put(p.getValue());
+            });
+        }
+        return jsonArray.toString();
     }
 }
