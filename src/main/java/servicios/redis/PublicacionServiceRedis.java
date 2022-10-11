@@ -1,10 +1,13 @@
 package servicios.redis;
 
 import api.PublicacionService;
+import com.google.gson.Gson;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import redis.clients.jedis.JedisPooled;
 import redis.clients.jedis.search.Document;
+import web.PostDTO;
+
 import java.util.List;
 import java.util.Map;
 
@@ -47,9 +50,12 @@ public class PublicacionServiceRedis implements PublicacionService {
         try (JedisPooled jedis = sentinels.getJedisMaster()) {
             List<Document> resultado = jedis.ftSearch("postIdx", "@autor:" + nombre).getDocuments();
             JSONArray jsonArray = new JSONArray();
+            Gson gson = new Gson();
             for (Document document : resultado) {
                 document.getProperties().forEach(p -> {
-                    jsonArray.put(p.getValue());
+                    PostDTO post = gson.fromJson(p.getValue().toString(), PostDTO.class);
+                    JSONObject postJson = new JSONObject(gson.toJson(post));
+                    jsonArray.put(postJson);
                 });
             }
             return jsonArray.toString();
@@ -82,9 +88,12 @@ public class PublicacionServiceRedis implements PublicacionService {
         try (JedisPooled jedis = sentinels.getJedisMaster()) {
             List<Document> resultado = jedis.ftSearch("postIdx", "@texto:" + texto).getDocuments();
             JSONArray jsonArray = new JSONArray();
+            Gson gson = new Gson();
             for (Document document : resultado) {
                 document.getProperties().forEach(p -> {
-                    jsonArray.put(p.getValue());
+                    PostDTO post = gson.fromJson(p.getValue().toString(), PostDTO.class);
+                    JSONObject postJson = new JSONObject(gson.toJson(post));
+                    jsonArray.put(postJson);
                 });
             }
             return jsonArray.toString();

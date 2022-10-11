@@ -1,10 +1,10 @@
 package servicios.redis;
 
 import api.PaginaService;
+import org.json.JSONArray;
 import redis.clients.jedis.JedisPooled;
 
 public class PaginaServiceRedis  implements PaginaService {
-    private final static String PAGINAS_KEY = "paginas";
     private RedisSentinel sentinels;
 
     public PaginaServiceRedis(RedisSentinel sentinels) {
@@ -14,7 +14,10 @@ public class PaginaServiceRedis  implements PaginaService {
     @Override
     public String pagina(String paginaId) {
         try (JedisPooled jedis = sentinels.getJedisMaster()) {
-            return jedis.hget(PAGINAS_KEY, "pagina:" + paginaId);
+            Object jsonObject = jedis.jsonGet("page:" + paginaId);
+            JSONArray jsonArray = new JSONArray();
+            jsonArray.put(jsonObject);
+            return jsonArray.toString();
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
