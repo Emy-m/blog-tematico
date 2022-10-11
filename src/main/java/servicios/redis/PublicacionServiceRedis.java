@@ -9,15 +9,15 @@ import java.util.List;
 import java.util.Map;
 
 public class PublicacionServiceRedis implements PublicacionService {
-    private String url;
+    private RedisSentinel sentinels;
 
-    public PublicacionServiceRedis(String url) {
-        this.url = url;
+    public PublicacionServiceRedis(RedisSentinel sentinels) {
+        this.sentinels = sentinels;
     }
 
     @Override
     public String ultimasPublicaciones() {
-        try (JedisPooled jedis = new JedisPooled(this.url)) {
+        try (JedisPooled jedis = sentinels.getJedisMaster()) {
             List<String> pubsPorFecha = jedis.zrange("pubsPorFecha", 0, 3);
             List<JSONArray> jsonArray = jedis.jsonMGet(pubsPorFecha.toArray(new String[pubsPorFecha.size()]));
             JSONArray jsonArrayPlain = new JSONArray();
@@ -32,7 +32,7 @@ public class PublicacionServiceRedis implements PublicacionService {
 
     @Override
     public String publicacion(String publicacionId) {
-        try (JedisPooled jedis = new JedisPooled(this.url)) {
+        try (JedisPooled jedis = sentinels.getJedisMaster()) {
             Object jsonObject = jedis.jsonGet("post:" + publicacionId);
             JSONArray jsonArray = new JSONArray();
             jsonArray.put(jsonObject);
@@ -44,7 +44,7 @@ public class PublicacionServiceRedis implements PublicacionService {
 
     @Override
     public String publicaciones(String nombre) {
-        try (JedisPooled jedis = new JedisPooled(this.url)) {
+        try (JedisPooled jedis = sentinels.getJedisMaster()) {
             List<Document> resultado = jedis.ftSearch("postIdx", "@autor:" + nombre).getDocuments();
             JSONArray jsonArray = new JSONArray();
             for (Document document : resultado) {
@@ -60,7 +60,7 @@ public class PublicacionServiceRedis implements PublicacionService {
 
     @Override
     public String autoresPublicaciones() {
-        try (JedisPooled jedis = new JedisPooled(this.url)) {
+        try (JedisPooled jedis = sentinels.getJedisMaster()) {
             Map<String, String> resultado = jedis.hgetAll("autor:pubs");
             JSONArray resultadoJSON = new JSONArray();
             resultado.entrySet().stream()
@@ -79,7 +79,7 @@ public class PublicacionServiceRedis implements PublicacionService {
 
     @Override
     public String publicacionesPorTexto(String texto) {
-        try (JedisPooled jedis = new JedisPooled(this.url)) {
+        try (JedisPooled jedis = sentinels.getJedisMaster()) {
             List<Document> resultado = jedis.ftSearch("postIdx", "@texto:" + texto).getDocuments();
             JSONArray jsonArray = new JSONArray();
             for (Document document : resultado) {

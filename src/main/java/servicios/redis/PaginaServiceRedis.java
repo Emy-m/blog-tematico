@@ -1,19 +1,22 @@
 package servicios.redis;
 
 import api.PaginaService;
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPooled;
 
 public class PaginaServiceRedis  implements PaginaService {
     private final static String PAGINAS_KEY = "paginas";
-    private String url;
+    private RedisSentinel sentinels;
 
-    public PaginaServiceRedis(String url) {
-        this.url = url;
+    public PaginaServiceRedis(RedisSentinel sentinels) {
+        this.sentinels = sentinels;
     }
 
     @Override
     public String pagina(String paginaId) {
-        Jedis jedis = new Jedis(this.url);
-        return jedis.hget(PAGINAS_KEY, "pagina:" + paginaId);
+        try (JedisPooled jedis = sentinels.getJedisMaster()) {
+            return jedis.hget(PAGINAS_KEY, "pagina:" + paginaId);
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 }
