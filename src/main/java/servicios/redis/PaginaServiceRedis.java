@@ -2,18 +2,18 @@ package servicios.redis;
 
 import api.PaginaService;
 import org.json.JSONArray;
-import redis.clients.jedis.JedisPooled;
+import redis.clients.jedis.UnifiedJedis;
 
 public class PaginaServiceRedis  implements PaginaService {
-    private RedisSentinel sentinels;
+    private Master master;
 
-    public PaginaServiceRedis(RedisSentinel sentinels) {
-        this.sentinels = sentinels;
+    public PaginaServiceRedis(Master master) {
+        this.master = master;
     }
 
     @Override
     public String pagina(String paginaId) {
-        try (JedisPooled jedis = sentinels.getJedisMaster()) {
+        try (UnifiedJedis jedis = master.getMaster()) {
             Object jsonObject = jedis.jsonGet("page:" + paginaId);
             JSONArray jsonArray = new JSONArray();
             jsonArray.put(jsonObject);

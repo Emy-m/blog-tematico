@@ -2,10 +2,11 @@ package servicios.redis;
 
 import redis.clients.jedis.JedisPooled;
 import redis.clients.jedis.JedisSentinelPool;
+import redis.clients.jedis.UnifiedJedis;
 
 import java.util.Set;
 
-public class RedisSentinel {
+public class RedisSentinel implements Master {
     private JedisSentinelPool sentinels;
     private String user;
     private String password;
@@ -16,7 +17,7 @@ public class RedisSentinel {
         this.password = password;
     }
 
-    public JedisPooled getJedisMaster() {
+    public UnifiedJedis getMaster() {
         return new JedisPooled(sentinels.getCurrentHostMaster().getHost(), sentinels.getCurrentHostMaster().getPort(), user, password);
     }
 }

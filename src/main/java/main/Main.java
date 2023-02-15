@@ -1,9 +1,11 @@
 package main;
 
+import redis.clients.jedis.HostAndPort;
 import servicios.mongo.PaginaServiceMDB;
 import servicios.mongo.PublicacionServiceMDB;
 import servicios.redis.PaginaServiceRedis;
 import servicios.redis.PublicacionServiceRedis;
+import servicios.redis.RedisCluster;
 import servicios.redis.RedisSentinel;
 import web.WebAPI;
 
@@ -28,7 +30,16 @@ public class Main {
         sentinels.add("127.0.0.1:5000");
         sentinels.add("127.0.0.1:5001");
         sentinels.add("127.0.0.1:5002");
+
+        Set<HostAndPort> clusters = new HashSet<>();
+        clusters.add(new HostAndPort("localhost", 7000));
+        clusters.add(new HostAndPort("localhost", 7001));
+        clusters.add(new HostAndPort("localhost", 7002));
+        clusters.add(new HostAndPort("localhost", 7003));
+        clusters.add(new HostAndPort("localhost", 7004));
+        clusters.add(new HostAndPort("localhost", 7005));
         RedisSentinel redisSentinel = new RedisSentinel(sentinels, REDIS_SENTINEL_GROUP, REDIS_USER, REDIS_PASS);
+        //RedisCluster redisCluster = new RedisCluster(clusters);
 
         PaginaServiceRedis paginaServiceRedis = new PaginaServiceRedis(redisSentinel);
         PublicacionServiceRedis publicacionServiceRedis = new PublicacionServiceRedis(redisSentinel);

@@ -4,7 +4,7 @@ import api.PublicacionService;
 import com.google.gson.Gson;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import redis.clients.jedis.JedisPooled;
+import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.search.Document;
 import web.PostDTO;
 
@@ -12,15 +12,15 @@ import java.util.List;
 import java.util.Map;
 
 public class PublicacionServiceRedis implements PublicacionService {
-    private RedisSentinel sentinels;
+    private Master master;
 
-    public PublicacionServiceRedis(RedisSentinel sentinels) {
-        this.sentinels = sentinels;
+    public PublicacionServiceRedis(Master master) {
+        this.master = master;
     }
 
     @Override
     public String ultimasPublicaciones() {
-        try (JedisPooled jedis = sentinels.getJedisMaster()) {
+        try (UnifiedJedis jedis = master.getMaster()) {
             List<String> pubsPorFecha = jedis.zrange("pubsPorFecha", 0, 3);
             List<JSONArray> jsonArray = jedis.jsonMGet(pubsPorFecha.toArray(new String[pubsPorFecha.size()]));
             JSONArray jsonArrayPlain = new JSONArray();
@@ -35,7 +35,7 @@ public class PublicacionServiceRedis implements PublicacionService {
 
     @Override
     public String publicacion(String publicacionId) {
-        try (JedisPooled jedis = sentinels.getJedisMaster()) {
+        try (UnifiedJedis jedis = master.getMaster()) {
             Object jsonObject = jedis.jsonGet("post:" + publicacionId);
             JSONArray jsonArray = new JSONArray();
             jsonArray.put(jsonObject);
@@ -47,7 +47,7 @@ public class PublicacionServiceRedis implements PublicacionService {
 
     @Override
     public String publicaciones(String nombre) {
-        try (JedisPooled jedis = sentinels.getJedisMaster()) {
+        try (UnifiedJedis jedis = master.getMaster()) {
             List<Document> resultado = jedis.ftSearch("postIdx", "@autor:" + nombre).getDocuments();
             JSONArray jsonArray = new JSONArray();
             Gson gson = new Gson();
@@ -66,7 +66,7 @@ public class PublicacionServiceRedis implements PublicacionService {
 
     @Override
     public String autoresPublicaciones() {
-        try (JedisPooled jedis = sentinels.getJedisMaster()) {
+        try (UnifiedJedis jedis = master.getMaster()) {
             Map<String, String> resultado = jedis.hgetAll("autor:pubs");
             JSONArray resultadoJSON = new JSONArray();
             resultado.entrySet().stream()
@@ -85,7 +85,7 @@ public class PublicacionServiceRedis implements PublicacionService {
 
     @Override
     public String publicacionesPorTexto(String texto) {
-        try (JedisPooled jedis = sentinels.getJedisMaster()) {
+        try (UnifiedJedis jedis = master.getMaster()) {
             List<Document> resultado = jedis.ftSearch("postIdx", "@texto:" + texto).getDocuments();
             JSONArray jsonArray = new JSONArray();
             Gson gson = new Gson();
